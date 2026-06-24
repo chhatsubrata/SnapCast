@@ -1,0 +1,117 @@
+@import 'tailwindcss';
+
+/*
+ * Tailwind v4 is configured CSS-first. We opt into CLASS-based dark mode (the
+ * renderer toggles `.dark` on <html>) instead of the default media strategy,
+ * because the theme is a user setting that can override the OS.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    'Geist Variable', 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+
+  /* "Atmospheric Precision" design tokens — dark (default). */
+  --color-app-bg: #0b1220;
+  --color-app-surface: #111a2e;
+  --color-app-surface-2: #16203a;
+  --color-app-border: #1f2c45;
+  --color-app-primary: #a5d8ff;
+  --color-app-primary-strong: #7cc0ff;
+  --color-app-text: #e8eef7;
+  --color-app-muted: #64748b;
+  /* Timer reads as accent on dark, as ink on light. */
+  --color-app-timer: #a5d8ff;
+  /* Text/icon colour that sits on top of the primary fill. */
+  --color-on-primary: #0b1220;
+}
+
+:root {
+  /* Driven from the renderer via useTheme(). */
+  --app-opacity: 0.95;
+  --app-scale: 1;
+}
+
+/* "Atmospheric Precision Light" overrides. */
+:root:not(.dark) {
+  --color-app-bg: #f8fafc;
+  --color-app-surface: #ffffff;
+  --color-app-surface-2: #f1f5f9;
+  --color-app-border: #e2e8f0;
+  --color-app-primary: #007aff;
+  --color-app-primary-strong: #0063d1;
+  --color-app-text: #1e293b;
+  --color-app-muted: #64748b;
+  --color-app-timer: #1e293b;
+  --color-on-primary: #ffffff;
+}
+
+/* The window is frameless + transparent; never paint an opaque page background. */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  color-scheme: light dark;
+  cursor: default;
+}
+
+/* Smooth theme transitions for backgrounds, borders and text. */
+* {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Disable transitions for users who prefer reduced motion (accessibility). */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* High-contrast support: strengthen borders when the OS requests it. */
+@media (prefers-contrast: more) {
+  .border-white\/10,
+  .border-white\/15 {
+    border-color: rgba(255, 255, 255, 0.4) !important;
+  }
+}
+
+/* Elements inside the draggable shell must opt out to remain clickable. */
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* All interactive controls use a pointer cursor (Tailwind's reset clears it). */
+button:not(:disabled),
+[role='button'],
+[role='switch'],
+a[href],
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Thin, unobtrusive scrollbars for the full-window pages. */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 120, 0.4);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}

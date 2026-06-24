@@ -1,0 +1,70 @@
+# ──────────────────────────────────────────────────────────────
+# Shot Capture — .gitignore
+# Everything listed here is excluded from git (never uploaded to GitHub).
+# ──────────────────────────────────────────────────────────────
+
+# Dependencies (reinstalled with `pnpm install`)
+node_modules/
+.pnpm-store/
+
+# Build output / bundles
+out/
+dist/
+dist-electron/
+build/Release/
+
+# Packaged installers & artifacts (large — never commit)
+release/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.snap
+*.zip
+*.blockmap
+
+# Generated icons (recreated by `postinstall` → scripts/generate-icons.mjs)
+build/icon.png
+build/icons/
+resources/icon.png
+resources/tray.png
+
+# Caches
+.eslintcache
+.cache/
+.vite/
+*.tsbuildinfo
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment / secrets — NEVER commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editor / OS junk
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local agent / tooling state
+.claude/
+memory/
+
+# Temp
+tmp/
+temp/
+*.tmp
