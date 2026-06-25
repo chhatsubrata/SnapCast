@@ -35,7 +35,7 @@ interface PersistShape {
 }
 
 const store = new Store<PersistShape>({
-  name: 'shot-capture',
+  name: 'snapcast',
   defaults: {
     settings: DEFAULT_SETTINGS,
     events: [],

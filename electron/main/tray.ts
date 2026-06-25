@@ -23,7 +23,7 @@ export class TrayManager {
   create(service: PredictionService, windows: WindowManager): void {
     const icon = this.resolveIcon()
     this.tray = new Tray(icon)
-    this.tray.setToolTip('Shot Capture')
+    this.tray.setToolTip('SnapCast')
 
     const menu = Menu.buildFromTemplate([
       { label: 'Show Widget', click: () => windows.show() },

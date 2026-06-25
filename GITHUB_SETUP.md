@@ -1,4 +1,4 @@
-# Uploading Shot Capture to GitHub — Step by Step
+# Uploading SnapCast to GitHub — Step by Step
 
 A beginner-friendly guide to put this project on GitHub. Follow it top to bottom.
 Commands are run in a terminal **inside the project folder** (the folder that
@@ -57,7 +57,7 @@ git status               # review the list — make sure no secrets appear
 ## 3. Make your first commit (a saved snapshot)
 
 ```bash
-git commit -m "Initial commit: Shot Capture"
+git commit -m "Initial commit: SnapCast"
 ```
 
 ---
@@ -69,20 +69,20 @@ You can do this with the website **or** the GitHub CLI. Pick one.
 ### Option A — Website (easiest)
 
 1. Go to <https://github.com/new>.
-2. **Repository name:** `shot-capture`
+2. **Repository name:** `snapcast`
 3. Visibility: **Public** or **Private** (your choice).
 4. **Important:** leave "Add a README", "Add .gitignore", and "license"
    **unchecked** — this project already has them.
 5. Click **Create repository**.
 6. Copy the repo URL shown, e.g.
-   `https://github.com/YOUR-USERNAME/shot-capture.git`
+   `https://github.com/YOUR-USERNAME/snapcast.git`
 
 ### Option B — GitHub CLI (one command)
 
 ```bash
 # install once: https://cli.github.com  — then:
 gh auth login
-gh repo create shot-capture --source=. --public --push
+gh repo create snapcast --source=. --public --push
 ```
 If you use Option B, **skip steps 5 and 6** — it already created and pushed.
 
@@ -93,7 +93,7 @@ If you use Option B, **skip steps 5 and 6** — it already created and pushed.
 Replace the URL with the one you copied in step 4.
 
 ```bash
-git remote add origin https://github.com/YOUR-USERNAME/shot-capture.git
+git remote add origin https://github.com/YOUR-USERNAME/snapcast.git
 git branch -M main
 ```
 
@@ -137,7 +137,7 @@ Release instead:
 ```bash
 pnpm build:linux        # or build:win / build:mac — produces files in release/1.0.0/
 gh release create v1.0.0 release/1.0.0/*.AppImage release/1.0.0/*.deb \
-  --title "Shot Capture 1.0.0" --notes "First release"
+  --title "SnapCast 1.0.0" --notes "First release"
 ```
 
 Users can then download the `.AppImage` / `.deb` / `.exe` / `.dmg` straight from

@@ -1,4 +1,4 @@
-# 📸 Shot Capture — 1-Page Cheat Sheet
+# 📸 SnapCast — 1-Page Cheat Sheet
 
 > A floating bubble that **predicts when the next screenshot will happen** and shows a live countdown.
 > It only *guesses* from past patterns — it never takes, blocks, or touches screenshots. Estimates, not promises.

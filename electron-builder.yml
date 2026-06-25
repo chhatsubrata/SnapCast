@@ -1,5 +1,5 @@
-appId: com.shotcapture.app
-productName: Shot Capture
+appId: com.snapcast.app
+productName: SnapCast
 copyright: Copyright © 2026
 directories:
   buildResources: build
@@ -16,7 +16,7 @@ asar: true
 asarUnpack:
   - resources/**
 win:
-  executableName: shot-capture
+  executableName: snapcast
   target:
     - target: nsis
       arch: [x64]

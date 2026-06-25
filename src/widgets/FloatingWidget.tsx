@@ -275,7 +275,7 @@ const ExpandedView = memo(function ExpandedView(): React.JSX.Element {
             draggable={false}
           />
           <span className="text-sm font-semibold" style={{ color: 'var(--color-app-primary)' }}>
-            Shot Capture
+            SnapCast
           </span>
         </div>
         <div className="flex items-center gap-0.5" style={noDrag}>
