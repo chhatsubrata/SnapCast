@@ -38,6 +38,7 @@ import { Countdown } from '@components/Countdown'
 import { ProgressRing } from '@components/ProgressRing'
 import { IconButton } from '@components/IconButton'
 import { RISK_THEME } from '@utils/risk'
+import appIcon from '../assets/app-icon.png'
 
 const drag = { WebkitAppRegion: 'drag' } as React.CSSProperties
 const noDrag = { WebkitAppRegion: 'no-drag' } as React.CSSProperties
@@ -258,12 +259,13 @@ const ExpandedView = memo(function ExpandedView(): React.JSX.Element {
       {/* Header (draggable) */}
       <div className="flex items-center justify-between px-4 pt-4 pb-1" style={drag}>
         <div className="flex items-center gap-2">
-          <span
-            className="flex h-7 w-7 items-center justify-center rounded-lg"
-            style={{ background: 'var(--color-app-surface-2)', color: 'var(--color-app-primary)' }}
-          >
-            <Shield size={15} />
-          </span>
+          <img
+            src={appIcon}
+            alt=""
+            aria-hidden
+            className="h-7 w-7 rounded-lg"
+            draggable={false}
+          />
           <span className="text-sm font-semibold" style={{ color: 'var(--color-app-primary)' }}>
             Shot Capture
           </span>

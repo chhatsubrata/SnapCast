@@ -1,17 +1,20 @@
 /**
  * Dependency-free PNG icon generator.
  *
- * Produces the app + tray icons procedurally so the repo needs no binary
- * assets checked in. Run via `pnpm icons`. Draws a rounded-square badge with a
- * sky-blue gradient and a white progress-ring motif (matching the widget).
+ * Resizes the master app image (resources/icon-master.png) into every icon
+ * size the app + installers need. Pure JS — no native deps (sharp/ImageMagick)
+ * so `pnpm install` (postinstall) works on any machine. Decodes the master PNG
+ * (inflate + unfilter), area-averages it down to each target size, and
+ * re-encodes with the encoder below.
  */
 
-import { deflateSync } from 'node:zlib'
-import { writeFileSync, mkdirSync } from 'node:fs'
+import { deflateSync, inflateSync } from 'node:zlib'
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+const MASTER = join(root, 'resources/icon-master.png')
 
 function crc32(buf) {
   let c = ~0
@@ -54,62 +57,128 @@ function encodePng(size, pixels) {
   ])
 }
 
-function draw(size) {
-  const px = Buffer.alloc(size * size * 4)
-  const r = size * 0.22 // corner radius
-  const cx = size / 2
-  const cy = size / 2
-  const ringR = size * 0.3
-  const ringW = size * 0.09
+function paeth(a, b, c) {
+  const p = a + b - c
+  const pa = Math.abs(p - a)
+  const pb = Math.abs(p - b)
+  const pc = Math.abs(p - c)
+  if (pa <= pb && pa <= pc) return a
+  if (pb <= pc) return b
+  return c
+}
 
-  const inRounded = (x, y) => {
-    const dx = Math.min(x, size - x)
-    const dy = Math.min(y, size - y)
-    if (dx >= r && dy >= r) return true
-    if (dx >= r || dy >= r) return x >= 0 && y >= 0
-    const ddx = r - dx
-    const ddy = r - dy
-    return ddx * ddx + ddy * ddy <= r * r
+/** Decode an 8-bit non-interlaced PNG (color type 2/RGB or 6/RGBA) to RGBA. */
+function decodePng(buf) {
+  let p = 8 // skip signature
+  let width = 0
+  let height = 0
+  let colorType = 0
+  const idat = []
+  while (p < buf.length) {
+    const len = buf.readUInt32BE(p)
+    const type = buf.toString('ascii', p + 4, p + 8)
+    const data = buf.subarray(p + 8, p + 8 + len)
+    if (type === 'IHDR') {
+      width = data.readUInt32BE(0)
+      height = data.readUInt32BE(4)
+      const bitDepth = data[8]
+      colorType = data[9]
+      const interlace = data[12]
+      if (bitDepth !== 8) throw new Error(`unsupported bit depth ${bitDepth}`)
+      if (colorType !== 2 && colorType !== 6)
+        throw new Error(`unsupported color type ${colorType}`)
+      if (interlace !== 0) throw new Error('interlaced PNG unsupported')
+    } else if (type === 'IDAT') {
+      idat.push(data)
+    } else if (type === 'IEND') {
+      break
+    }
+    p += 12 + len
   }
 
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const i = (y * size + x) * 4
-      if (!inRounded(x + 0.5, y + 0.5)) {
-        px[i + 3] = 0
-        continue
-      }
-      // vertical gradient sky-500 -> indigo-500
-      const t = y / size
-      const rC = Math.round(14 + (99 - 14) * t)
-      const gC = Math.round(165 + (102 - 165) * t)
-      const bC = Math.round(233 + (241 - 233) * t)
-      px[i] = rC
-      px[i + 1] = gC
-      px[i + 2] = bC
-      px[i + 3] = 255
+  const channels = colorType === 6 ? 4 : 3
+  const bpp = channels
+  const stride = width * bpp
+  const raw = inflateSync(Buffer.concat(idat))
+  const cur = Buffer.alloc(stride)
+  const prev = Buffer.alloc(stride)
+  const out = Buffer.alloc(width * height * 4)
 
-      // white ring (270deg arc) overlay
-      const dx = x - cx
-      const dy = y - cy
-      const dist = Math.sqrt(dx * dx + dy * dy)
-      if (Math.abs(dist - ringR) <= ringW / 2) {
-        const ang = (Math.atan2(dy, dx) + Math.PI * 2.5) % (Math.PI * 2)
-        if (ang < Math.PI * 1.6) {
-          px[i] = 255
-          px[i + 1] = 255
-          px[i + 2] = 255
+  let off = 0
+  for (let y = 0; y < height; y++) {
+    const filter = raw[off++]
+    raw.copy(cur, 0, off, off + stride)
+    off += stride
+    for (let i = 0; i < stride; i++) {
+      const a = i >= bpp ? cur[i - bpp] : 0
+      const b = prev[i]
+      const c = i >= bpp ? prev[i - bpp] : 0
+      let v = cur[i]
+      if (filter === 1) v += a
+      else if (filter === 2) v += b
+      else if (filter === 3) v += (a + b) >> 1
+      else if (filter === 4) v += paeth(a, b, c)
+      cur[i] = v & 0xff
+    }
+    for (let x = 0; x < width; x++) {
+      const si = x * bpp
+      const di = (y * width + x) * 4
+      out[di] = cur[si]
+      out[di + 1] = cur[si + 1]
+      out[di + 2] = cur[si + 2]
+      out[di + 3] = channels === 4 ? cur[si + 3] : 255
+    }
+    cur.copy(prev)
+  }
+  return { width, height, pixels: out }
+}
+
+/** Area-average resize (premultiplied alpha) from src RGBA to size x size. */
+function resize(src, size) {
+  const { width: sw, height: sh, pixels: sp } = src
+  const out = Buffer.alloc(size * size * 4)
+  for (let y = 0; y < size; y++) {
+    const sy0 = Math.floor((y * sh) / size)
+    const sy1 = Math.max(sy0 + 1, Math.floor(((y + 1) * sh) / size))
+    for (let x = 0; x < size; x++) {
+      const sx0 = Math.floor((x * sw) / size)
+      const sx1 = Math.max(sx0 + 1, Math.floor(((x + 1) * sw) / size))
+      let r = 0
+      let g = 0
+      let b = 0
+      let a = 0
+      let n = 0
+      for (let yy = sy0; yy < sy1; yy++) {
+        for (let xx = sx0; xx < sx1; xx++) {
+          const si = (yy * sw + xx) * 4
+          const al = sp[si + 3]
+          r += sp[si] * al
+          g += sp[si + 1] * al
+          b += sp[si + 2] * al
+          a += al
+          n++
         }
+      }
+      const di = (y * size + x) * 4
+      if (a > 0) {
+        out[di] = Math.round(r / a)
+        out[di + 1] = Math.round(g / a)
+        out[di + 2] = Math.round(b / a)
+        out[di + 3] = Math.round(a / n)
+      } else {
+        out[di + 3] = 0
       }
     }
   }
-  return px
+  return out
 }
+
+const master = decodePng(readFileSync(MASTER))
 
 function write(path, size) {
   const full = join(root, path)
   mkdirSync(dirname(full), { recursive: true })
-  writeFileSync(full, encodePng(size, draw(size)))
+  writeFileSync(full, encodePng(size, resize(master, size)))
   console.log('wrote', path, `${size}x${size}`)
 }
 
