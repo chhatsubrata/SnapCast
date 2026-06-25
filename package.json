@@ -1,10 +1,10 @@
 {
-  "name": "shot-capture",
+  "name": "snapcast",
   "version": "1.0.0",
   "description": "Professional desktop floating widget that predicts upcoming screenshot timing from observed historical events. A standalone productivity overlay — it never modifies, hooks, blocks, or evades any screenshot software.",
   "author": "Your Name",
   "license": "MIT",
-  "homepage": "https://github.com/your-org/shot-capture",
+  "homepage": "https://github.com/your-org/snapcast",
   "main": "./out/main/index.js",
   "type": "module",
   "scripts": {

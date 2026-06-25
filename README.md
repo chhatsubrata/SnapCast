@@ -37,13 +37,13 @@ file for your OS from the project's **Releases** page and install it.
 
 | OS | Download | How to install |
 |----|----------|----------------|
-| **Windows** | `Shot Capture Setup x.y.z.exe` | Double-click → follow the installer. |
-| **Windows (no install)** | `Shot Capture x.y.z.exe` (portable) | Double-click to run — nothing installed. |
-| **Linux (any)** | `Shot Capture-x.y.z.AppImage` | `chmod +x` it, then double-click / run it. |
-| **Linux (Debian/Ubuntu)** | `shot-capture_x.y.z_amd64.deb` | `sudo apt install ./shot-capture_x.y.z_amd64.deb` |
-| **macOS** | `Shot Capture-x.y.z.dmg` | Open the DMG → drag the app into **Applications**. |
+| **Windows** | `SnapCast Setup x.y.z.exe` | Double-click → follow the installer. |
+| **Windows (no install)** | `SnapCast x.y.z.exe` (portable) | Double-click to run — nothing installed. |
+| **Linux (any)** | `SnapCast-x.y.z.AppImage` | `chmod +x` it, then double-click / run it. |
+| **Linux (Debian/Ubuntu)** | `snapcast_x.y.z_amd64.deb` | `sudo apt install ./snapcast_x.y.z_amd64.deb` |
+| **macOS** | `SnapCast-x.y.z.dmg` | Open the DMG → drag the app into **Applications**. |
 
-After installing the `.deb`, **Shot Capture** appears in your application menu
+After installing the `.deb`, **SnapCast** appears in your application menu
 with its icon. If the menu icon doesn't refresh immediately, log out/in or run
 `sudo gtk-update-icon-cache /usr/share/icons/hicolor`.
 

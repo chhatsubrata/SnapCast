@@ -34,7 +34,7 @@ if (!app.requestSingleInstanceLock()) {
   app.on('second-instance', () => windows.show())
 
   app.whenReady().then(async () => {
-    electronApp.setAppUserModelId('com.shotcapture.app')
+    electronApp.setAppUserModelId('com.snapcast.app')
 
     app.on('browser-window-created', (_event, window) => {
       optimizer.watchWindowShortcuts(window)
