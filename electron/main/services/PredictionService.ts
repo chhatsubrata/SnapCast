@@ -120,8 +120,8 @@ export class PredictionService {
 
     this.notifications.notify(
       'screenshot-detected',
-      'Screenshot detected',
-      'A new screenshot event was recorded.'
+      'Gotcha! 📸',
+      "Caught that one. I'll guess the next better."
     )
     this.windows.send('screenshot:detected', event)
     this.evaluateLearningMilestones()
@@ -168,8 +168,8 @@ export class PredictionService {
       this.crossedConfidenceThreshold = true
       this.notifications.notify(
         'confidence-improved',
-        'Confidence improved',
-        `Prediction confidence reached ${Math.round(confidence * 100)}%.`
+        'Getting good at this! 🎯',
+        `I'm ${Math.round(confidence * 100)}% sure when the next shot lands now.`
       )
     }
   }
@@ -177,12 +177,16 @@ export class PredictionService {
   private handleRiskTransitions(level: RiskLevel): void {
     if (level === this.lastRiskLevel) return
     if (level === RiskLevel.HIGH) {
-      this.notifications.notify('high-risk', 'High screenshot risk', 'A screenshot may be imminent.')
+      this.notifications.notify(
+        'high-risk',
+        'Heads up! 👀',
+        'A shot might be coming soon — maybe wrap up.'
+      )
     } else if (level === RiskLevel.CRITICAL) {
       this.notifications.notify(
         'critical-risk',
-        'Critical screenshot risk',
-        'Estimated screenshot is very close. Prediction based — not guaranteed.'
+        'Brace yourself! ⚡',
+        "Shot's basically here. Might be off, but be ready."
       )
     }
     this.lastRiskLevel = level
@@ -219,16 +223,16 @@ export class PredictionService {
     if (this.wasLearning && stats.totalEvents === 1) {
       this.notifications.notify(
         'learning-started',
-        'Learning started',
-        'Observing screenshot timing to build predictions.'
+        "Let's learn! 🧠",
+        "Watching when shots happen so I can call the next ones."
       )
     }
     if (this.wasLearning && !stats.isLearning) {
       this.wasLearning = false
       this.notifications.notify(
         'learning-completed',
-        'Learning ready',
-        'Enough data gathered — predictions are now active.'
+        "All set! 🚀",
+        "Learned enough — I've got your back now."
       )
     }
   }

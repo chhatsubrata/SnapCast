@@ -36,6 +36,7 @@ import { useTimerStore } from '@store/timerStore'
 import { useWidgetStore } from '@store/widgetStore'
 import { Countdown } from '@components/Countdown'
 import { ProgressRing } from '@components/ProgressRing'
+import { CatWalker } from '@components/CatWalker'
 import { IconButton } from '@components/IconButton'
 import { RISK_THEME } from '@utils/risk'
 import appIcon from '../assets/app-icon.png'
@@ -154,12 +155,18 @@ const CompactView = memo(function CompactView(): React.JSX.Element {
   const { animate, transition } = glowMotion(prediction)
 
   return (
-    <motion.button
-      type="button"
-      onClick={expand}
-      aria-label="Expand widget"
-      title="Click to expand"
-      className="group flex h-full w-full items-center gap-2 rounded-2xl border px-2.5 text-left"
+    <div className="flex h-full w-full flex-col gap-1">
+      {/* Desktop-pet lane: a pixel cat strolls along the top of the bar. */}
+      <div className="h-8 shrink-0 px-1">
+        <CatWalker imminent={prediction.imminent} risk={prediction.riskLevel} />
+      </div>
+
+      <motion.button
+        type="button"
+        onClick={expand}
+        aria-label="Expand widget"
+        title="Click to expand"
+        className="group flex min-h-0 w-full flex-1 items-center gap-2 py-2 rounded-2xl border px-2.5 text-left"
       style={{
         ...noDrag,
         // Background + border tint with proximity: calm surface when SAFE, the
@@ -209,7 +216,8 @@ const CompactView = memo(function CompactView(): React.JSX.Element {
           <RefreshCw size={20} />
         </span>
       )}
-    </motion.button>
+      </motion.button>
+    </div>
   )
 })
 

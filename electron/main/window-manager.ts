@@ -15,7 +15,7 @@ import { logger } from './logger'
 
 /** Per-mode window dimensions. Compact is a tiny live-timer box. */
 const WIDGET_SIZES: Record<WidgetMode, { width: number; height: number }> = {
-  compact: { width: 272, height: 92 },
+  compact: { width: 272, height: 132 },
   expanded: { width: 344, height: 580 }
 }
 
