@@ -4,10 +4,9 @@
  */
 
 import { app, Menu, nativeImage, Tray } from 'electron'
-import { join } from 'node:path'
-import { existsSync } from 'node:fs'
 import type { PredictionService } from './services/PredictionService'
 import type { WindowManager } from './window-manager'
+import { resolveResource } from './assets'
 import { logger } from './logger'
 
 /**
@@ -45,12 +44,12 @@ export class TrayManager {
   }
 
   private resolveIcon(): Electron.NativeImage {
-    const candidate = app.isPackaged
-      ? join(process.resourcesPath, 'tray.png')
-      : join(__dirname, '../../resources/tray.png')
-    if (existsSync(candidate)) {
+    const candidate = resolveResource('tray.png')
+    if (candidate) {
       const img = nativeImage.createFromPath(candidate)
-      if (!img.isEmpty()) return img.resize({ width: 16, height: 16 })
+      // 22px reads cleaner than 16 on GNOME/KDE top-panel indicators, which
+      // scale the pixmap to the panel height; the shell down-samples as needed.
+      if (!img.isEmpty()) return img.resize({ width: 22, height: 22 })
     }
     return nativeImage.createFromDataURL(FALLBACK_ICON_DATA_URL)
   }

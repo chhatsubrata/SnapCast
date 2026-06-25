@@ -4,13 +4,13 @@
  * and typed push helpers to the renderer.
  */
 
-import { app, BrowserWindow, screen, shell } from 'electron'
+import { BrowserWindow, screen, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
-import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import type { IpcEventChannel, IpcEventMap } from '@shared/ipc'
 import type { WidgetMode } from '@shared/types'
 import { loadSettings, loadWindowBounds, saveWindowBounds, type WindowBounds } from './store'
+import { resolveResource } from './assets'
 import { logger } from './logger'
 
 /** Per-mode window dimensions. Compact is a tiny live-timer box. */
@@ -90,10 +90,7 @@ export class WindowManager {
 
   /** App icon for the window/taskbar (packaged builds also get it from build/icon.png). */
   private resolveAppIcon(): string | undefined {
-    const candidate = app.isPackaged
-      ? join(process.resourcesPath, 'icon.png')
-      : join(__dirname, '../../resources/icon.png')
-    return existsSync(candidate) ? candidate : undefined
+    return resolveResource('icon.png') ?? undefined
   }
 
   /** Restore the saved bounds if they still sit on a connected display. */
