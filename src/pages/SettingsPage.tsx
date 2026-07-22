@@ -9,6 +9,15 @@ import { RotateCcw, Timer } from 'lucide-react'
 import { type ThemeMode } from '@shared/types'
 import { useSettingsStore } from '@store/settingsStore'
 import { PageShell } from '@components/PageShell'
+import { RemainingInput } from '@components/RemainingInput'
+import { PixelPet } from '@components/pets/PixelPet'
+import {
+  DAY_LABELS,
+  PET_SPRITES,
+  ROTATION,
+  petForDate,
+  petForRotation
+} from '@components/pets/sprites'
 
 function SettingsPageBase(): React.JSX.Element {
   const settings = useSettingsStore((s) => s.settings)
@@ -197,6 +206,7 @@ function SettingsPageBase(): React.JSX.Element {
           >
             <Timer size={15} /> Sync cycle now
           </button>
+          <RemainingInput intervalSeconds={settings.prediction.fixedIntervalSeconds} />
           <p className="text-[12px]" style={{ color: 'var(--color-app-muted)' }}>
             {settings.prediction.anchorTimestamp
               ? `Last synced ${new Date(settings.prediction.anchorTimestamp).toLocaleTimeString()}.`
@@ -220,8 +230,124 @@ function SettingsPageBase(): React.JSX.Element {
             }
           />
         </Section>
+
+        {/* Mascots */}
+        <Section title="Mascots">
+          <Toggle
+            label="Change mascot every hour"
+            checked={settings.appearance.hourlyMascots}
+            onChange={(v) => update({ appearance: { ...settings.appearance, hourlyMascots: v } })}
+          />
+          <p className="text-[12px]" style={{ color: 'var(--color-app-muted)' }}>
+            {settings.appearance.hourlyMascots
+              ? 'Tap a mascot to put it on the widget now — the rest of the cast follows on from there, an hour each, starting over from the first once everyone has had a turn.'
+              : 'One companion per weekday: otter, red panda, meerkat, beaver, bee, fennec fox, and the cat on Sunday.'}
+          </p>
+          <MascotStrip
+            hourly={settings.appearance.hourlyMascots}
+            onDuty={
+              settings.appearance.hourlyMascots
+                ? petForRotation(
+                    new Date(),
+                    settings.appearance.mascotStart,
+                    settings.appearance.mascotAnchor
+                  ).id
+                : petForDate(new Date()).id
+            }
+            onPick={(id) =>
+              update({
+                appearance: {
+                  ...settings.appearance,
+                  mascotStart: id,
+                  mascotAnchor: Date.now()
+                }
+              })
+            }
+          />
+          <p className="text-[12px]" style={{ color: 'var(--color-app-muted)' }}>
+            Hover a mascot on the widget for a moment and it will wave and tell you what it stands
+            for.
+          </p>
+        </Section>
       </div>
     </PageShell>
+  )
+}
+
+/**
+ * The cast side by side, the one currently on duty highlighted. In weekday mode
+ * each is labelled with its day; in hourly mode tapping one puts it on duty
+ * right away and the rest of the cast follows on from there, an hour each.
+ */
+function MascotStrip({
+  hourly,
+  onDuty,
+  onPick
+}: {
+  hourly: boolean
+  onDuty: string
+  onPick: (id: string) => void
+}): React.JSX.Element {
+  const cast = hourly
+    ? ROTATION
+    : [...PET_SPRITES]
+        .filter((s) => s.weekday !== null)
+        .sort((a, b) => (a.weekday ?? 0) - (b.weekday ?? 0))
+  const dutyIndex = ROTATION.findIndex((s) => s.id === onDuty)
+
+  return (
+    <div className="flex flex-wrap items-end justify-center gap-1">
+      {cast.map((sprite, i) => {
+        const active = sprite.id === onDuty
+        // In hourly mode, show how many shifts away each mascot is rather than a
+        // clock hour — the cast is longer than a working day.
+        const turnsAway = (i - dutyIndex + ROTATION.length) % ROTATION.length
+        const label = hourly
+          ? active
+            ? 'NOW'
+            : `+${turnsAway}h`
+          : DAY_LABELS[sprite.weekday ?? 0]
+
+        const content = (
+          <>
+            <PixelPet sprite={sprite} behavior="sit" facing={1} size={38} />
+            <span
+              className="text-[9px] font-semibold tracking-wide"
+              style={{ color: active ? 'var(--color-app-primary)' : 'var(--color-app-muted)' }}
+            >
+              {label}
+            </span>
+          </>
+        )
+        const boxStyle = {
+          background: active ? 'var(--color-app-surface)' : 'transparent',
+          boxShadow: active ? '0 0 0 1px var(--color-app-primary)' : undefined
+        }
+
+        return hourly ? (
+          <button
+            key={sprite.id}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onPick(sprite.id)}
+            title={`${sprite.name} — ${sprite.theme}`}
+            className="flex flex-col items-center gap-1 rounded-xl px-1.5 pt-1 pb-0.5 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 active:scale-95"
+            style={boxStyle}
+          >
+            {content}
+          </button>
+        ) : (
+          <div
+            key={sprite.id}
+            title={`${sprite.name} — ${sprite.theme}`}
+            className="flex flex-col items-center gap-1 rounded-xl px-1.5 pt-1 pb-0.5"
+            style={boxStyle}
+          >
+            {content}
+          </div>
+        )
+      })}
+    </div>
   )
 }
 

@@ -28,6 +28,9 @@ export class TrayManager {
     const menu = Menu.buildFromTemplate([
       { label: 'Show Widget', click: () => windows.show() },
       { label: 'Hide Widget', click: () => windows.hide() },
+      // Guaranteed recovery path when the window is oversized or offscreen and
+      // its own buttons are out of reach.
+      { label: 'Reset Widget Size', click: () => windows.resetSize() },
       { type: 'separator' },
       { label: 'Settings', click: () => {
         windows.show()

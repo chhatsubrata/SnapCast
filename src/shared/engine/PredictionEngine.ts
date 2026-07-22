@@ -160,7 +160,16 @@ export class PredictionEngine {
 
     // Anchor the cycle on whichever is most recent: the last observed screenshot
     // or the manual "Sync" timestamp. Either alone is enough to start counting.
-    const anchor = maxNullable(lastScreenshot, this.fixed.anchorTimestamp)
+    //
+    // Exception: in fixed-interval mode an explicit anchor wins outright. The
+    // user setting the phase by hand ("Sync now", or typing the remaining time)
+    // is a deliberate statement about where the cycle sits, and an older
+    // observed screenshot must not silently override it — with `max` a
+    // deliberately backdated anchor would simply be ignored.
+    const anchor =
+      useFixed && this.fixed.anchorTimestamp !== null
+        ? this.fixed.anchorTimestamp
+        : maxNullable(lastScreenshot, this.fixed.anchorTimestamp)
 
     const empty: PredictionResult = {
       nextEstimatedScreenshot: null,

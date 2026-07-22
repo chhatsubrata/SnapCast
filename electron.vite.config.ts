@@ -8,7 +8,11 @@ export default defineConfig({
     build: {
       sourcemap: true,
       rollupOptions: {
-        input: { index: resolve('electron/main/index.ts') }
+        input: { index: resolve('electron/main/index.ts') },
+        // Stay ESM: `electron-store` v10 is ESM-only, so a CommonJS bundle gets a
+        // module namespace instead of the class. `.mjs` makes the entry
+        // unambiguously ESM regardless of the package's `type` field.
+        output: { format: 'es', entryFileNames: 'index.mjs' }
       }
     },
     resolve: {

@@ -20,6 +20,7 @@ import {
   type StatusBadge
 } from '@shared/types'
 import { PredictionEngine } from '@shared/engine/PredictionEngine'
+import { anchorForRemaining, checkRemainingSeconds } from '@shared/engine/fixed-interval'
 import { SourceManager } from '../sources'
 import { NotificationManager } from '../notifications'
 import type { WindowManager } from '../window-manager'
@@ -275,6 +276,32 @@ export class PredictionService {
 
   async resetSettings(): Promise<AppSettings> {
     return this.updateSettings(DEFAULT_SETTINGS)
+  }
+
+  /**
+   * Set the countdown by hand: re-phase the fixed-interval cycle so it reads
+   * `seconds` from now.
+   *
+   * Validated here as well as in the UI — main owns the settings, so it must not
+   * trust a renderer that skipped the form.
+   */
+  async setRemaining(seconds: number): Promise<{ ok: boolean; message: string }> {
+    const { fixedIntervalSeconds, algorithm } = this.settings.prediction
+    if (algorithm !== AlgorithmType.FIXED_INTERVAL) {
+      return { ok: false, message: 'Only available in fixed-interval mode.' }
+    }
+    const check = checkRemainingSeconds(seconds, fixedIntervalSeconds)
+    if (!check.ok) return { ok: false, message: check.message ?? 'Invalid time.' }
+
+    const anchorTimestamp = anchorForRemaining(Date.now(), seconds, fixedIntervalSeconds)
+    await this.updateSettings({
+      prediction: { ...this.settings.prediction, anchorTimestamp }
+    })
+    logger.info('countdown set manually', { seconds })
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.round(seconds % 60)
+    const pretty = mins > 0 ? (secs > 0 ? `${mins}m ${secs}s` : `${mins}m`) : `${secs}s`
+    return { ok: true, message: `Countdown set to ${pretty}.` }
   }
 
   // --- Engine / source operations ------------------------------------------

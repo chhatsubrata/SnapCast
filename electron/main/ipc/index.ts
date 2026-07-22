@@ -36,10 +36,15 @@ export function registerIpcHandlers(
   // --- Window control ---
   handle('window:minimize', () => windows.minimize())
   handle('window:hide', () => windows.hide())
-  handle('window:show', () => windows.show())
+  // Programmatic show — never activates, so it can't steal the user's caret.
+  handle('window:show', () => windows.showInactive())
   handle('window:set-always-on-top', (value) => windows.setAlwaysOnTop(value))
   handle('window:set-opacity', (value) => windows.setOpacity(value))
   handle('window:resize-for-mode', (mode) => windows.resizeForMode(mode))
+  handle('window:reset-size', () => windows.resetSize())
+  handle('window:is-oversized', () => windows.isOversized())
+  handle('window:drag-start', (p) => windows.dragStart(p))
+  handle('window:drag-move', (p) => windows.dragMove(p))
   handle('window:close', async () => {
     const settings = service.getSettings()
     // Reset the timer (stopwatch + sync anchor) without touching other settings.
@@ -69,6 +74,7 @@ export function registerIpcHandlers(
     return service.getPrediction()
   })
   handle('prediction:restart-learning', () => service.restartLearning())
+  handle('prediction:set-remaining', ({ seconds }) => service.setRemaining(seconds))
 
   // --- Event history ---
   handle('events:list', () => service.getHistory())

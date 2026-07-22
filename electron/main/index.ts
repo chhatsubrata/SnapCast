@@ -88,6 +88,14 @@ function registerGlobalShortcuts(): void {
   })
   if (ok) logger.info('global hotkey registered', { accelerator })
   else logger.warn('global hotkey registration failed', { accelerator })
+
+  // Size escape hatch, reachable even when the widget's own buttons are not.
+  // NOT Ctrl+Shift+R: a global shortcut takes that combination away from every
+  // other app, and it is Chrome's hard reload.
+  const resetAccelerator = 'CommandOrControl+Alt+Shift+R'
+  const resetOk = globalShortcut.register(resetAccelerator, () => windows.resetSize())
+  if (resetOk) logger.info('global hotkey registered', { accelerator: resetAccelerator })
+  else logger.warn('global hotkey registration failed', { accelerator: resetAccelerator })
 }
 
 /** Apply the user's "launch on startup" preference at boot. */
