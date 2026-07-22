@@ -8,54 +8,14 @@
  * re-encodes with the encoder below.
  */
 
-import { deflateSync, inflateSync } from 'node:zlib'
+import { inflateSync } from 'node:zlib'
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { encodePng } from './lib/png.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const MASTER = join(root, 'resources/icon-master.png')
-
-function crc32(buf) {
-  let c = ~0
-  for (let i = 0; i < buf.length; i++) {
-    c ^= buf[i]
-    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xedb88320 & -(c & 1))
-  }
-  return ~c >>> 0
-}
-
-function chunk(type, data) {
-  const typeBuf = Buffer.from(type, 'ascii')
-  const len = Buffer.alloc(4)
-  len.writeUInt32BE(data.length, 0)
-  const crcBuf = Buffer.alloc(4)
-  crcBuf.writeUInt32BE(crc32(Buffer.concat([typeBuf, data])), 0)
-  return Buffer.concat([len, typeBuf, data, crcBuf])
-}
-
-function encodePng(size, pixels) {
-  const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
-  const ihdr = Buffer.alloc(13)
-  ihdr.writeUInt32BE(size, 0)
-  ihdr.writeUInt32BE(size, 4)
-  ihdr[8] = 8 // bit depth
-  ihdr[9] = 6 // RGBA
-  // raw scanlines with filter byte 0
-  const stride = size * 4
-  const raw = Buffer.alloc((stride + 1) * size)
-  for (let y = 0; y < size; y++) {
-    raw[y * (stride + 1)] = 0
-    pixels.copy(raw, y * (stride + 1) + 1, y * stride, y * stride + stride)
-  }
-  const idat = deflateSync(raw)
-  return Buffer.concat([
-    sig,
-    chunk('IHDR', ihdr),
-    chunk('IDAT', idat),
-    chunk('IEND', Buffer.alloc(0))
-  ])
-}
 
 function paeth(a, b, c) {
   const p = a + b - c
@@ -178,7 +138,7 @@ const master = decodePng(readFileSync(MASTER))
 function write(path, size) {
   const full = join(root, path)
   mkdirSync(dirname(full), { recursive: true })
-  writeFileSync(full, encodePng(size, resize(master, size)))
+  writeFileSync(full, encodePng(size, size, resize(master, size)))
   console.log('wrote', path, `${size}x${size}`)
 }
 

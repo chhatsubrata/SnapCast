@@ -5,7 +5,7 @@
   "author": "Your Name",
   "license": "MIT",
   "homepage": "https://github.com/your-org/snapcast",
-  "main": "./out/main/index.js",
+  "main": "./out/main/index.mjs",
   "type": "module",
   "scripts": {
     "dev": "electron-vite dev",

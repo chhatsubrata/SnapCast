@@ -5,8 +5,11 @@
  */
 
 import { memo } from 'react'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Minimize2 } from 'lucide-react'
 import { useWidgetStore } from '@store/widgetStore'
+import { IconButton } from '@components/IconButton'
+import { useWindowDrag } from '@hooks/useWindowDrag'
+import { useWindowOversized } from '@hooks/useWindowOversized'
 
 interface PageShellProps {
   title: string
@@ -16,6 +19,8 @@ interface PageShellProps {
 
 function PageShellBase({ title, children, actions }: PageShellProps): React.JSX.Element {
   const setView = useWidgetStore((s) => s.setView)
+  const dragHandle = useWindowDrag()
+  const oversized = useWindowOversized()
 
   return (
     <div className="h-screen w-screen p-2">
@@ -29,12 +34,8 @@ function PageShellBase({ title, children, actions }: PageShellProps): React.JSX.
       >
       <header
         className="flex items-center justify-between border-b px-4 py-3"
-        style={
-          {
-            WebkitAppRegion: 'drag',
-            borderColor: 'var(--color-app-border)'
-          } as React.CSSProperties
-        }
+        {...dragHandle}
+        style={{ ...dragHandle.style, borderColor: 'var(--color-app-border)' }}
       >
         <div className="flex items-center gap-2">
           <button
@@ -50,6 +51,14 @@ function PageShellBase({ title, children, actions }: PageShellProps): React.JSX.
         </div>
         <div className="no-drag flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
           {actions}
+          {/* Same size escape hatch as the widget header — only while it applies. */}
+          {oversized && (
+            <IconButton
+              icon={Minimize2}
+              label="Reset size"
+              onClick={() => void window.api.invoke('window:reset-size')}
+            />
+          )}
         </div>
       </header>
       <main className="flex-1 overflow-y-auto p-4">{children}</main>

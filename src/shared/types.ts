@@ -108,6 +108,20 @@ export interface AppearanceSettings {
   opacity: number
   /** Widget scale multiplier 0.8..1.5. */
   widgetScale: number
+  /**
+   * Desktop pet rotation. Off: one mascot per weekday (Sunday keeps the cat).
+   * On: the cast takes turns, changing every hour and wrapping back to the first
+   * once everyone has had a shift. While the timer runs the shifts are counted
+   * from the start of the session; otherwise they follow the clock hour.
+   */
+  hourlyMascots: boolean
+  /**
+   * Sprite id the user picked as the current mascot. The rotation carries on
+   * from there, one mascot per hour. `null` follows the clock hour instead.
+   */
+  mascotStart: string | null
+  /** When {@link mascotStart} was picked (epoch ms); the hour count runs from here. */
+  mascotAnchor: number
 }
 
 export interface PredictionSettings {
@@ -217,7 +231,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   appearance: {
     theme: 'system',
     opacity: 0.95,
-    widgetScale: 1
+    widgetScale: 1,
+    hourlyMascots: false,
+    mascotStart: null,
+    mascotAnchor: 0
   },
   prediction: {
     algorithm: AlgorithmType.FIXED_INTERVAL,

@@ -20,6 +20,7 @@ import { memo, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   GripVertical,
+  Minimize2,
   RefreshCw,
   Settings,
   Shield,
@@ -36,12 +37,16 @@ import { useTimerStore } from '@store/timerStore'
 import { useWidgetStore } from '@store/widgetStore'
 import { Countdown } from '@components/Countdown'
 import { ProgressRing } from '@components/ProgressRing'
-import { CatWalker } from '@components/CatWalker'
+import { PetWalker } from '@components/pets/PetWalker'
 import { IconButton } from '@components/IconButton'
+import { RemainingInput } from '@components/RemainingInput'
+import { useWindowDrag } from '@hooks/useWindowDrag'
+import { useWindowOversized } from '@hooks/useWindowOversized'
 import { RISK_THEME } from '@utils/risk'
 import appIcon from '../assets/app-icon.png'
 
-const drag = { WebkitAppRegion: 'drag' } as React.CSSProperties
+// Window moving is driven by `useWindowDrag`, not by `-webkit-app-region` — see
+// that hook for why. `noDrag` is kept only as a belt-and-braces opt-out.
 const noDrag = { WebkitAppRegion: 'no-drag' } as React.CSSProperties
 
 const restShadow = '0 4px 16px rgba(0,0,0,0.12)'
@@ -138,6 +143,7 @@ const CompactView = memo(function CompactView(): React.JSX.Element {
   const update = useSettingsStore((s) => s.update)
   const setMode = useWidgetStore((s) => s.setMode)
   const expand = useCallback(() => setMode('expanded'), [setMode])
+  const dragHandle = useWindowDrag()
 
   const isFixed = settings.prediction.algorithm === AlgorithmType.FIXED_INTERVAL
   const sync = useCallback(
@@ -156,9 +162,9 @@ const CompactView = memo(function CompactView(): React.JSX.Element {
 
   return (
     <div className="flex h-full w-full flex-col gap-1">
-      {/* Desktop-pet lane: a pixel cat strolls along the top of the bar. */}
+      {/* Desktop-pet lane: the weekday mascot strolls along the top of the bar. */}
       <div className="h-8 shrink-0 px-1">
-        <CatWalker imminent={prediction.imminent} risk={prediction.riskLevel} />
+        <PetWalker imminent={prediction.imminent} risk={prediction.riskLevel} />
       </div>
 
       <motion.button
@@ -179,8 +185,9 @@ const CompactView = memo(function CompactView(): React.JSX.Element {
       transition={transition}
     >
       <span
-        className="flex h-full cursor-grab items-center text-[var(--color-app-muted)] opacity-50 hover:opacity-100 active:cursor-grabbing"
-        style={{ ...drag, color: isSafe ? undefined : theme.accent }}
+        className="flex h-full items-center text-[var(--color-app-muted)] opacity-50 hover:opacity-100 active:cursor-grabbing"
+        {...dragHandle}
+        style={{ ...dragHandle.style, color: isSafe ? undefined : theme.accent }}
         onClick={(e) => e.stopPropagation()}
       >
         <GripVertical size={20}  />
@@ -229,6 +236,8 @@ const ExpandedView = memo(function ExpandedView(): React.JSX.Element {
   const update = useSettingsStore((s) => s.update)
   const setMode = useWidgetStore((s) => s.setMode)
   const setView = useWidgetStore((s) => s.setView)
+  const dragHandle = useWindowDrag()
+  const oversized = useWindowOversized()
 
   const excludeFromCapture = settings.privacy.excludeFromCapture
   const isFixed = settings.prediction.algorithm === AlgorithmType.FIXED_INTERVAL
@@ -264,8 +273,11 @@ const ExpandedView = memo(function ExpandedView(): React.JSX.Element {
       animate={animate}
       transition={transition}
     >
-      {/* Header (draggable) */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-1" style={drag}>
+      {/* Header: drag handle for the whole window (buttons opt out via .no-drag). */}
+      <div
+        className="flex items-center justify-between px-4 pt-4 pb-1"
+        {...dragHandle}
+      >
         <div className="flex items-center gap-2">
           <img
             src={appIcon}
@@ -280,6 +292,14 @@ const ExpandedView = memo(function ExpandedView(): React.JSX.Element {
         </div>
         <div className="flex items-center gap-0.5" style={noDrag}>
           <IconButton icon={Settings} label="Settings" onClick={() => setView('settings')} />
+          {/* Only offered when the window has actually outgrown its footprint. */}
+          {oversized && (
+            <IconButton
+              icon={Minimize2}
+              label="Reset size"
+              onClick={() => void window.api.invoke('window:reset-size')}
+            />
+          )}
           <IconButton icon={Shrink} label="Collapse" onClick={() => setMode('compact')} />
           <IconButton icon={X} label="Close" onClick={() => void window.api.invoke('window:close')} />
         </div>
@@ -307,6 +327,16 @@ const ExpandedView = memo(function ExpandedView(): React.JSX.Element {
             {compactLabel(prediction)}
           </span>
         </ProgressRing>
+
+        {/* Type the remaining time to re-phase the cycle without waiting. */}
+        {isFixed && (
+          <div className="mt-3 w-full px-4" style={noDrag}>
+            <RemainingInput
+              intervalSeconds={settings.prediction.fixedIntervalSeconds}
+              variant="widget"
+            />
+          </div>
+        )}
       </div>
 
       {/* Sync + interval (fixed-interval mode) */}

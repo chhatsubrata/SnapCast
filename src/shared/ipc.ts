@@ -30,6 +30,18 @@ export interface IpcRequestMap {
   'window:set-always-on-top': { args: boolean; result: void }
   'window:set-opacity': { args: number; result: void }
   'window:resize-for-mode': { args: WidgetMode; result: void }
+  /** Escape hatch: leave maximized/full-screen and snap back to the mode footprint. */
+  'window:reset-size': { args: void; result: void }
+  /** Whether the window is currently bigger than its mode's footprint. */
+  'window:is-oversized': { args: void; result: boolean }
+  /**
+   * Pointer-driven window move. `drag-start` anchors the gesture (pointer screen
+   * position + current bounds); every `drag-move` repositions the window by the
+   * delta since that anchor. Used instead of `-webkit-app-region: drag`, which
+   * several Linux WMs refuse and which mis-hit-tests inside animated layers.
+   */
+  'window:drag-start': { args: { x: number; y: number }; result: void }
+  'window:drag-move': { args: { x: number; y: number }; result: void }
   /** X-button close: honours the quit-on-close / reset-timer-on-close settings. */
   'window:close': { args: void; result: void }
 
@@ -43,6 +55,14 @@ export interface IpcRequestMap {
   'prediction:get-history': { args: void; result: ScreenshotEvent[] }
   'prediction:record-manual': { args: number | undefined; result: PredictionResult }
   'prediction:restart-learning': { args: void; result: void }
+  /**
+   * Set the countdown by hand: re-phase the fixed-interval cycle so it reads
+   * `seconds` from now. Rejected (with a reason) if it exceeds the interval.
+   */
+  'prediction:set-remaining': {
+    args: { seconds: number }
+    result: { ok: boolean; message: string }
+  }
 
   // Event history management
   'events:list': { args: void; result: ScreenshotEvent[] }
@@ -86,6 +106,8 @@ export interface IpcEventMap {
   'status:badge': StatusBadge
   'settings:changed': AppSettings
   'widget:mode-changed': WidgetMode
+  /** Window grew past its mode's footprint (or shrank back) — drives the reset button. */
+  'window:oversized': boolean
   'navigate': 'widget' | 'analytics' | 'settings' | 'wizard' | 'events'
   /** Asks the renderer to play the custom notification sound. */
   'notification:sound': void
@@ -101,6 +123,10 @@ export const IPC_REQUEST_CHANNELS: IpcRequestChannel[] = [
   'window:set-always-on-top',
   'window:set-opacity',
   'window:resize-for-mode',
+  'window:reset-size',
+  'window:is-oversized',
+  'window:drag-start',
+  'window:drag-move',
   'window:close',
   'settings:get',
   'settings:update',
@@ -109,6 +135,7 @@ export const IPC_REQUEST_CHANNELS: IpcRequestChannel[] = [
   'prediction:get-history',
   'prediction:record-manual',
   'prediction:restart-learning',
+  'prediction:set-remaining',
   'events:list',
   'events:delete',
   'events:update',
@@ -138,6 +165,7 @@ export const IPC_EVENT_CHANNELS: IpcEventChannel[] = [
   'status:badge',
   'settings:changed',
   'widget:mode-changed',
+  'window:oversized',
   'navigate',
   'notification:sound'
 ]
